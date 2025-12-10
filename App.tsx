@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useContext } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Text, View, StyleSheet, Button, ScrollView } from "react-native";
+import { Text, ScrollView, StyleSheet, View } from "react-native";
+import { AuthProvider, AuthContext } from "./src/utils/AuthContext";
+import LoginScreen from "./src/screens/LoginScreen";
+import RegisterScreen from "./src/screens/RegisterScreen";
 import ExpenseTrackingScreen from "./src/screens/ExpenseTrackerScreen";
 import BudgetScreen from "./src/screens/BudgetScreen";
 import SpendingBreakdown from "./src/screens/SpendingBreakdown";
@@ -10,23 +13,9 @@ import SpendingBreakdown from "./src/screens/SpendingBreakdown";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Test user ID
 const CURRENT_USER_ID = "user-123";
 
-// Temporary screens
-function LoginScreen({ navigation }: any){
-  return (
-    <View style={styles.center}>
-      <Text>Login Screen</Text>
-      {/*button to check the other tabs for now, delete later*/}
-      <Button
-        title ="App"
-        onPress={() => navigation.navigate("MainTabs")}
-      />
-    </View>
-  );
-}
-
+// Search Filter screen
 function SearchFilterScreen() {
   return (
     <View style={styles.center}>
@@ -35,6 +24,7 @@ function SearchFilterScreen() {
   );
 }
 
+// App Info Screen
 function AppInfoScreen() {
   return (
     <ScrollView style={styles.infoContainer}>
@@ -42,39 +32,49 @@ function AppInfoScreen() {
 
       <Text style={styles.sectionTitle}>Purpose</Text>
       <Text style={styles.infoText}>
-        This app helps you manage your personal finances by tracking expenses,
-        setting budgets, and analyzing your spending patterns.
+        This app helps you manage your finances by tracking expenses,
+        setting budgets, and analyzing spending patterns.
       </Text>
 
       <Text style={styles.sectionTitle}>Features</Text>
       <Text style={styles.infoText}>• Track daily expenses</Text>
-      <Text style={styles.infoText}>• Set monthly budgets per category</Text>
+      <Text style={styles.infoText}>• Set monthly budgets</Text>
       <Text style={styles.infoText}>• Search and filter transactions</Text>
       <Text style={styles.infoText}>• View spending breakdown</Text>
-      <Text style={styles.infoText}>• Get alerts when over budget</Text>
-      
-      <Text style={styles.sectionTitle}>How to Use</Text>
-      <Text style={styles.infoText}>
-        1. Add your expenses in the "Expenses" tab{'\n'}
-        2. Set budgets in the "Budget" tab{'\n'}
-        3. View your spending in the "Breakdown" tab{'\n'}
-        4. Get notified if you go over budget!
-      </Text>
+      <Text style={styles.infoText}>• Alerts when over budget</Text>
     </ScrollView>
   );
 }
 
-// Bottom tab navigator
+// Bottom Tab Navigation
 function MainTabs() {
+  const { logout } = useContext(AuthContext);
+
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ navigation }) => ({
         tabBarActiveTintColor: "#4caf50",
         tabBarInactiveTintColor: "#999",
         headerStyle: { backgroundColor: "#4caf50" },
         headerTintColor: "#fff",
         headerTitleStyle: { fontWeight: "bold" },
-      }}
+        headerRight: () => (
+          <Text
+            onPress={() => {
+              logout();
+              navigation.replace("Login");
+            }}
+            style={{
+              marginRight: 15,
+              fontSize: 16,
+              color: "white",
+              fontWeight: "bold",
+            }}
+          >
+            Logout
+          </Text>
+        ),
+      })}
     >
       <Tab.Screen
         name="TrackExpenses"
@@ -95,7 +95,7 @@ function MainTabs() {
           headerShown: false,
         }}
       >
-        {() => <BudgetScreen userId={CURRENT_USER_ID} />}
+        {() => <BudgetScreen userId="user-123" />}
       </Tab.Screen>
 
       <Tab.Screen
@@ -107,7 +107,7 @@ function MainTabs() {
           headerShown: false,
         }}
       >
-        {() => <SpendingBreakdown userId={CURRENT_USER_ID} />}
+        {() => <SpendingBreakdown userId="user-123" />}
       </Tab.Screen>
 
       <Tab.Screen
@@ -133,30 +133,41 @@ function MainTabs() {
   );
 }
 
-export default function App() {
-  return (
-    <NavigationContainer>
-      {/*no bottom tab for login screen*/}
-      <Stack.Navigator
-        screenOptions={{
-          headerStyle: { backgroundColor: "#4caf50" },
-          headerTintColor: "#fff",
-          headerTitleStyle: { fontWeight: "bold" },
-        }}
-      >
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ title: "Login" }}
-        />
+// Root Navigation with Auth
+function RootNavigator() {
+  const { user } = useContext(AuthContext);
 
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: "#4caf50" },
+        headerTintColor: "#fff",
+        headerTitleStyle: { fontWeight: "bold" },
+      }}
+    >
+      {user ? (
         <Stack.Screen
           name="MainTabs"
           component={MainTabs}
           options={{ headerShown: false }}
         />
-      </Stack.Navigator>
-    </NavigationContainer>
+      ) : (
+        <>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Register" component={RegisterScreen} />
+        </>
+      )}
+    </Stack.Navigator>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <NavigationContainer>
+        <RootNavigator />
+      </NavigationContainer>
+    </AuthProvider>
   );
 }
 
