@@ -9,20 +9,13 @@ import RegisterScreen from "./src/screens/RegisterScreen";
 import ExpenseTrackingScreen from "./src/screens/ExpenseTrackerScreen";
 import BudgetScreen from "./src/screens/BudgetScreen";
 import SpendingBreakdown from "./src/screens/SpendingBreakdown";
-
+import SearchFilterScreen from "./src/utils/SearchFilterScreen";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const CURRENT_USER_ID = "user-123";
 
-// Search Filter screen
-function SearchFilterScreen() {
-  return (
-    <View style={styles.center}>
-      <Text>Search & Filter Screen</Text>
-    </View>
-  );
-}
+
 
 // App Info Screen
 function AppInfoScreen() {
