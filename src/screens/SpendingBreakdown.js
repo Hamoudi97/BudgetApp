@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { ExpenseContext } from "../utils/ExpenseContext";
+import { useSelector } from "react-redux";
 
 // Helper functions
 function calculateCategoryTotals(expenses) {
@@ -30,7 +30,8 @@ function calculateTotalSpent(expenses) {
 
 // SpendingBreakdown that will show spending by category
 export default function SpendingBreakdown({ userId }) {
-  const { expenses, getBudgets } = useContext(ExpenseContext); // Use context
+  const expenses = useSelector((state) => state.expenses.expenses);
+  const budgets = useSelector((state) => state.budgets.budgets);
 
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
@@ -52,15 +53,17 @@ export default function SpendingBreakdown({ userId }) {
       // Demo loading delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Calculate totals from context expenses
+      // Calculate totals from Redux expenses
       const totals = calculateCategoryTotals(expenses);
       setCategoryTotals(totals);
 
       const total = calculateTotalSpent(expenses);
       setTotalSpent(total);
 
-      // Get budgets from context
-      const budgetsData = getBudgets(currentMonth, currentYear);
+      // Get budgets from Redux
+      const budgetsData = budgets.filter(
+        (b) => b.month === currentMonth && b.year === currentYear
+      );
       setCurrentBudgets(budgetsData);
 
       // Check for overspending

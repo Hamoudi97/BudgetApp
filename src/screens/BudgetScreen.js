@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { ExpenseContext } from "../utils/ExpenseContext";
+import { useDispatch, useSelector } from "react-redux";
+import { addBudget } from "../redux/actions";
 
 // Get unique categories from expenses
 function getCategories(expenses) {
@@ -20,7 +21,9 @@ function getCategories(expenses) {
 
 // BudgetScreen that will set monthly budgets for each category
 export default function BudgetScreen({ userId }) {
-  const { expenses, saveBudget, getBudgets } = useContext(ExpenseContext); // Use context
+  const dispatch = useDispatch();
+  const expenses = useSelector((state) => state.expenses.expenses);
+  const budgets = useSelector((state) => state.budgets.budgets);
 
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
@@ -47,7 +50,9 @@ export default function BudgetScreen({ userId }) {
       setCategories(categoryList);
 
       // Load existing budgets from context
-      const existingBudgets = getBudgets(currentMonth, currentYear);
+      const existingBudgets = budgets.filter(
+        (b) => b.month === currentMonth && b.year === currentYear
+      );
       const budgetObject = {};
       existingBudgets.forEach((budget) => {
         budgetObject[budget.category] = budget.amount.toString();
@@ -74,20 +79,20 @@ export default function BudgetScreen({ userId }) {
       // Demo loading delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Save each budget to context
+      // Save each budget to Redux
       for (const category of categories) {
         const amount = budgetInputs[category];
         if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0)
           continue;
 
-        saveBudget({
+        dispatch(addBudget({
           id: `budget-${Date.now()}-${category}`,
           userId,
           month: currentMonth,
           year: currentYear,
           category,
           amount: parseFloat(amount),
-        });
+        }));
       }
 
       Alert.alert("Success!", "Your budgets have been saved!");

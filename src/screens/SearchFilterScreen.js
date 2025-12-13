@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
   Animated,
   Easing,
 } from "react-native";
-import { ExpenseContext } from "../utils/ExpenseContext";
+import { useSelector } from "react-redux";
 
 // Custom Button
 const CustomButton = ({ title, onPress, color = "#FFB74D", icon = "" }) => {
@@ -69,7 +69,8 @@ const getUniqueCategories = (expenses) => {
 
 // Main Component
 export default function SearchFilterScreen({ navigation, route }) {
-  const { expenses, budgets, getBudgets } = useContext(ExpenseContext);
+  const expenses = useSelector((state) => state.expenses.expenses);
+  const budgets = useSelector((state) => state.budgets.budgets);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState(route?.params?.expenseCategory || route?.params?.filterCategory || "All");
   const [categories, setCategories] = useState(["All"]);
@@ -143,7 +144,9 @@ export default function SearchFilterScreen({ navigation, route }) {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1;
     const currentYear = currentDate.getFullYear();
-    const currentBudgets = getBudgets(currentMonth, currentYear);
+    const currentBudgets = budgets.filter(
+      (b) => b.month === currentMonth && b.year === currentYear
+    );
 
     // Calculate spending per category
     const categoryTotals = {};

@@ -6,10 +6,13 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import { useDispatch } from "react-redux";
+import { registerUser } from "../redux/actions";
 import { AuthContext } from "../utils/AuthContext";
 
 export default function RegisterScreen({ navigation }) {
   const { register } = useContext(AuthContext);
+  const dispatch = useDispatch();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,6 +36,7 @@ export default function RegisterScreen({ navigation }) {
       return;
     }
 
+    dispatch(registerUser({ email, password }));
     alert("Account created! Please log in.");
     navigation.navigate("Login");
   };

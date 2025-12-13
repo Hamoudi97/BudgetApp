@@ -1,9 +1,11 @@
-import React, { useState, useRef, useEffect, useContext } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity,StyleSheet,FlatList,ActivityIndicator, Animated, Easing } from "react-native";
-import { ExpenseContext } from "../utils/ExpenseContext";
+import { useDispatch, useSelector } from "react-redux";
+import { addExpense } from "../redux/actions";
 
 export default function ExpenseTrackingScreen({ navigation }) {
-  const { expenses, addExpense } = useContext(ExpenseContext);
+  const dispatch = useDispatch();
+  const expenses = useSelector((state) => state.expenses.expenses);
 
   const [amount, setAmount] = useState("");
   const [desc, setDesc] = useState("");
@@ -81,7 +83,7 @@ export default function ExpenseTrackingScreen({ navigation }) {
     setLoading(true);
 
     setTimeout(() => {
-      addExpense({ amount, desc, category });
+      dispatch(addExpense({ amount, desc, category }));
       setAmount("");
       setDesc("");
       setCategory("");

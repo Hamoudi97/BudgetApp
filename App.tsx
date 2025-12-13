@@ -3,6 +3,9 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Text, ScrollView, StyleSheet, View, ActivityIndicator } from "react-native";
+import { Provider, useDispatch } from "react-redux";
+import store from "./src/redux/store";
+import { logoutUser } from "./src/redux/actions";
 import { AuthProvider, AuthContext } from "./src/utils/AuthContext";
 import LoginScreen from "./src/screens/LoginScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
@@ -71,6 +74,7 @@ function AppInfoScreen() {
 // Bottom Tab Navigation
 function MainTabs() {
   const { logout } = useContext(AuthContext);
+  const dispatch = useDispatch();
 
   return (
     <Tab.Navigator
@@ -84,6 +88,7 @@ function MainTabs() {
           <Text
             onPress={() => {
               logout();
+              dispatch(logoutUser());
               navigation.replace("Login");
             }}
             style={{
@@ -185,13 +190,15 @@ function RootNavigator() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ExpenseProvider>
-        <NavigationContainer>
-          <RootNavigator />
-        </NavigationContainer>
-      </ExpenseProvider>
-    </AuthProvider>
+    <Provider store={store}>
+      <AuthProvider>
+        <ExpenseProvider>
+          <NavigationContainer>
+            <RootNavigator />
+          </NavigationContainer>
+        </ExpenseProvider>
+      </AuthProvider>
+    </Provider>
   );
 }
 

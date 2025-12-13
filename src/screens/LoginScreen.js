@@ -6,10 +6,14 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../redux/actions";
 import { AuthContext } from "../utils/AuthContext";
 
 export default function LoginScreen({ navigation }) {
   const { login } = useContext(AuthContext);
+  const dispatch = useDispatch();
+  const users = useSelector((state) => state.auth.users);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,6 +30,8 @@ export default function LoginScreen({ navigation }) {
       alert(result.error);
       return;
     }
+
+    dispatch(loginUser({ email, password }));
   };
 
   return (
