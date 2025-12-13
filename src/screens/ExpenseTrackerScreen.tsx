@@ -1,11 +1,23 @@
-import React, {useState, useRef, useEffect } from "react";
-import { View,Text,TextInput, TouchableOpacity,StyleSheet,FlatList, ActivityIndicator, Animated, Easing} from "react-native";
-
+import React, { useState, useRef, useEffect, useContext } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  Animated,
+  Easing,
+} from "react-native";
+import { ExpenseContext } from "../utils/ExpenseContext";
 
 export default function ExpenseTrackingScreen() {
-  const [amount, setAmount]= useState("");
-  const [desc, setDesc] =useState("");
-  const [expenses, setExpenses]=useState<any[]>([]);
+  const { expenses, addExpense } = useContext(ExpenseContext);
+
+  const [amount, setAmount] = useState("");
+  const [desc, setDesc] = useState("");
+  const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(false);
 
   const scale = new Animated.Value(1);
@@ -13,7 +25,7 @@ export default function ExpenseTrackingScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
 
-  //parallel
+  // Parallel
   useEffect(() => {
     Animated.parallel([
       Animated.timing(slideAnim, {
@@ -39,133 +51,165 @@ export default function ExpenseTrackingScreen() {
     ).start();
   }, []);
 
-  //sequence
+  // Sequence
   const handlePress = () => {
     Animated.sequence([
       Animated.delay(50),
-      Animated.spring(scale, { toValue:0.9, useNativeDriver: true }),
-      Animated.spring(scale, { toValue:1, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 0.9, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, useNativeDriver: true }),
     ]).start();
   };
 
-  const addExpense=() => {
-    if (!amount ||!desc) return;
+  const handleAddExpense = () => {
+    if (!amount || !desc || !category) {
+      alert("Please fill in all fields including category");
+      return;
+    }
 
     setLoading(true);
 
-    setTimeout(() =>{
-      setExpenses((prev) => [
-        ...prev,
-        {id: Date.now().toString(),amount, desc },
-      ]);
-
+    setTimeout(() => {
+      addExpense({ amount, desc, category });
       setAmount("");
       setDesc("");
-      setLoading(false); }, 700); 
+      setCategory("");
+      setLoading(false);
+    }, 700);
   };
 
   return (
     <View style={styles.container}>
-      <Animated.View style={{
-        opacity: fadeAnim,
-        transform: [{
-          translateY: slideAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, 50],
-          }),
-        }],
-      }}>
+      <Animated.View
+        style={{
+          opacity: fadeAnim,
+          transform: [
+            {
+              translateY: slideAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0, 50],
+              }),
+            },
+          ],
+        }}
+      >
         <Text style={styles.title}>Track Your Expenses 💵</Text>
       </Animated.View>
 
       <TextInput
         style={styles.input}
-        placeholder= "Expense Amount"
-        keyboardType = "numeric"
-        value= {amount}
+        placeholder="Expense Amount"
+        keyboardType="numeric"
+        value={amount}
         onChangeText={setAmount}
       />
 
       <TextInput
-        style= {styles.input}
+        style={styles.input}
+        placeholder="Category (e.g., Food, Transport)"
+        value={category}
+        onChangeText={setCategory}
+      />
+
+      <TextInput
+        style={styles.input}
         placeholder="Description"
-        value ={desc}
+        value={desc}
         onChangeText={setDesc}
       />
 
-      <Animated.View style={{ transform: [{scale }] }}>
-        <TouchableOpacity style={styles.addButton} onPress={() => { handlePress(); addExpense(); }}>
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => {
+            handlePress();
+            handleAddExpense();
+          }}
+        >
           <Text style={styles.addText}>Add Expense</Text>
         </TouchableOpacity>
       </Animated.View>
 
       {/* Loading */}
       {loading && (
-        <ActivityIndicator size="large" color="#4caf50" style={{ marginTop: 10 }} />
+        <ActivityIndicator
+          size="large"
+          color="#4caf50"
+          style={{ marginTop: 10 }}
+        />
       )}
 
       {/* Expenses list */}
       <FlatList
-        style ={{ marginTop: 20, width: "100%" }}
-        data = {expenses}
+        style={{ marginTop: 20, width: "100%" }}
+        data={expenses}
         keyExtractor={(item) => item.id}
-        renderItem={({ item })=>(
+        renderItem={({ item }) => (
           <View style={styles.expenseItem}>
-            <Text style={styles.expenseText}>${item.amount} - {item.desc}</Text>
+            <Text style={styles.expenseText}>
+              ${item.amount} - {item.category} - {item.description}
+            </Text>
           </View>
         )}
+        ListEmptyComponent={() => (
+          <Text style={styles.emptyText}>No expenses yet. Add one above!</Text>
+        )}
       />
-
-      
     </View>
   );
 }
 
-const styles =StyleSheet.create({
-  container:{ 
-    flex: 1, 
-    padding: 20, 
-    backgroundColor: "#e8f5e9" 
-},
-
-  title:{ 
-    fontSize: 28, 
-    fontWeight: "bold", 
-    marginBottom: 20, 
-    color: "#1b5e20" 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#e8f5e9",
   },
 
-  input:{
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "#1b5e20",
+  },
+
+  input: {
     backgroundColor: "#fff",
-    padding:12,
-    borderRadius:8,
-    marginBottom:10,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
     borderWidth: 1,
-    borderColor:"#ccc",
+    borderColor: "#ccc",
   },
-  addButton:{
+  addButton: {
     backgroundColor: "#4caf50",
-    padding:14,
+    padding: 14,
     borderRadius: 10,
-    alignItems:"center",
+    alignItems: "center",
     marginTop: 10,
   },
 
-  addText: { 
-    color:"#fff", 
-    fontSize: 18, 
-    fontWeight: "bold" 
+  addText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
-  expenseItem:{
+  expenseItem: {
     backgroundColor: "#fff",
-    padding:14,
+    padding: 14,
     borderRadius: 8,
     marginBottom: 8,
   },
-  
-  expenseText:{
-    fontSize: 16,
-    color: "#333" 
-},
 
+  expenseText: {
+    fontSize: 16,
+    color: "#333",
+  },
+
+  emptyText: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginTop: 20,
+    fontStyle: "italic",
+  },
 });

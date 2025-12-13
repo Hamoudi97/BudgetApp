@@ -9,13 +9,13 @@ import RegisterScreen from "./src/screens/RegisterScreen";
 import ExpenseTrackingScreen from "./src/screens/ExpenseTrackerScreen";
 import BudgetScreen from "./src/screens/BudgetScreen";
 import SpendingBreakdown from "./src/screens/SpendingBreakdown";
-import SearchFilterScreen from "./src/utils/SearchFilterScreen";
+import SearchFilterScreen from "./src/screens/SearchFilterScreen";
+import { ExpenseProvider } from "./src/utils/ExpenseContext";
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const CURRENT_USER_ID = "user-123";
-
-
 
 // App Info Screen
 function AppInfoScreen() {
@@ -157,9 +157,11 @@ function RootNavigator() {
 export default function App() {
   return (
     <AuthProvider>
-      <NavigationContainer>
-        <RootNavigator />
-      </NavigationContainer>
+      <ExpenseProvider>
+        <NavigationContainer>
+          <RootNavigator />
+        </NavigationContainer>
+      </ExpenseProvider>
     </AuthProvider>
   );
 }

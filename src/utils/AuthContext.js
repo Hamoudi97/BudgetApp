@@ -10,8 +10,7 @@ export const AuthProvider = ({ children }) => {
   const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   //empty state
-  useEffect(() => {
-  }, []);
+  useEffect(() => {}, []);
 
   // Register user
   const register = (email, password) => {
@@ -58,7 +57,6 @@ export const AuthProvider = ({ children }) => {
   // Logout user
   const logout = () => {
     setUser(null);
-
   };
 
   return (

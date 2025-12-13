@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -9,56 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-
-// Example data for demo
-const TEST_EXPENSES = [
-  { id: "exp-1", userId: "user-123", amount: 84.5, category: "Food" },
-  { id: "exp-2", userId: "user-123", amount: 15.0, category: "Transport" },
-  { id: "exp-3", userId: "user-123", amount: 63.0, category: "Entertainment" },
-  { id: "exp-4", userId: "user-123", amount: 26.0, category: "Subscription" },
-  { id: "exp-5", userId: "user-123", amount: 32.75, category: "Food" },
-  { id: "exp-6", userId: "user-123", amount: 25.0, category: "Transport" },
-  { id: "exp-7", userId: "user-123", amount: 169.0, category: "Shopping" },
-  { id: "exp-8", userId: "user-123", amount: 17.5, category: "Subscription" },
-  { id: "exp-9", userId: "user-123", amount: 23.5, category: "Subscription" },
-  { id: "exp-10", userId: "user-123", amount: 30.0, category: "Subscription" },
-  { id: "exp-11", userId: "user-123", amount: 51.75, category: "Shopping" },
-];
-
-const TEST_BUDGETS = [
-  {
-    id: "budget-1",
-    userId: "user-123",
-    month: 12,
-    year: 2025,
-    category: "Food",
-    amount: 250.0,
-  },
-  {
-    id: "budget-2",
-    userId: "user-123",
-    month: 12,
-    year: 2025,
-    category: "Transport",
-    amount: 100.0,
-  },
-  {
-    id: "budget-3",
-    userId: "user-123",
-    month: 12,
-    year: 2025,
-    category: "Entertainment",
-    amount: 150.0,
-  },
-  {
-    id: "budget-4",
-    userId: "user-123",
-    month: 12,
-    year: 2025,
-    category: "Subscription",
-    amount: 100.0,
-  },
-];
+import { ExpenseContext } from "../utils/ExpenseContext";
 
 // Get unique categories from expenses
 function getCategories(expenses) {
@@ -69,18 +20,20 @@ function getCategories(expenses) {
 
 // BudgetScreen that will set monthly budgets for each category
 export default function BudgetScreen({ userId }) {
+  const { expenses, saveBudget, getBudgets } = useContext(ExpenseContext); // Use context
+
   const currentDate = new Date();
   const currentMonth = currentDate.getMonth() + 1;
   const currentYear = currentDate.getFullYear();
 
   const [categories, setCategories] = useState([]);
-  const [budgets, setBudgets] = useState({});
+  const [budgetInputs, setBudgetInputs] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [expenses]); // Reload when expenses change
 
   const loadData = async () => {
     try {
@@ -89,16 +42,17 @@ export default function BudgetScreen({ userId }) {
       // Demo loading delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Get categories from test expenses
-      const categoryList = getCategories(TEST_EXPENSES);
+      // Get categories from context expenses
+      const categoryList = getCategories(expenses);
       setCategories(categoryList);
 
-      // Load existing budgets
+      // Load existing budgets from context
+      const existingBudgets = getBudgets(currentMonth, currentYear);
       const budgetObject = {};
-      TEST_BUDGETS.forEach((budget) => {
+      existingBudgets.forEach((budget) => {
         budgetObject[budget.category] = budget.amount.toString();
       });
-      setBudgets(budgetObject);
+      setBudgetInputs(budgetObject);
     } catch (error) {
       Alert.alert("Error", "Could not load data.");
     } finally {
@@ -107,7 +61,7 @@ export default function BudgetScreen({ userId }) {
   };
 
   const handleBudgetChange = (category, value) => {
-    setBudgets((prev) => ({
+    setBudgetInputs((prev) => ({
       ...prev,
       [category]: value,
     }));
@@ -119,6 +73,22 @@ export default function BudgetScreen({ userId }) {
 
       // Demo loading delay
       await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Save each budget to context
+      for (const category of categories) {
+        const amount = budgetInputs[category];
+        if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0)
+          continue;
+
+        saveBudget({
+          id: `budget-${Date.now()}-${category}`,
+          userId,
+          month: currentMonth,
+          year: currentYear,
+          category,
+          amount: parseFloat(amount),
+        });
+      }
 
       Alert.alert("Success!", "Your budgets have been saved!");
     } catch (error) {
@@ -163,7 +133,7 @@ export default function BudgetScreen({ userId }) {
                 <Text style={styles.dollarSign}>$</Text>
                 <TextInput
                   style={styles.input}
-                  value={budgets[category] || ""}
+                  value={budgetInputs[category] || ""}
                   onChangeText={(value) => handleBudgetChange(category, value)}
                   keyboardType="decimal-pad"
                   placeholder="0.00"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   View,
   Text,
@@ -7,56 +7,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-
-// Example data for demo
-const TEST_EXPENSES = [
-  { id: "exp-1", userId: "user-123", amount: 84.5, category: "Food" },
-  { id: "exp-2", userId: "user-123", amount: 15.0, category: "Transport" },
-  { id: "exp-3", userId: "user-123", amount: 63.0, category: "Entertainment" },
-  { id: "exp-4", userId: "user-123", amount: 26.0, category: "Subscription" },
-  { id: "exp-5", userId: "user-123", amount: 32.75, category: "Food" },
-  { id: "exp-6", userId: "user-123", amount: 25.0, category: "Transport" },
-  { id: "exp-7", userId: "user-123", amount: 169.0, category: "Shopping" },
-  { id: "exp-8", userId: "user-123", amount: 17.5, category: "Subscription" },
-  { id: "exp-9", userId: "user-123", amount: 23.5, category: "Subscription" },
-  { id: "exp-10", userId: "user-123", amount: 30.0, category: "Subscription" },
-  { id: "exp-11", userId: "user-123", amount: 51.75, category: "Shopping" },
-];
-
-const TEST_BUDGETS = [
-  {
-    id: "budget-1",
-    userId: "user-123",
-    month: 12,
-    year: 2025,
-    category: "Food",
-    amount: 250.0,
-  },
-  {
-    id: "budget-2",
-    userId: "user-123",
-    month: 12,
-    year: 2025,
-    category: "Transport",
-    amount: 100.0,
-  },
-  {
-    id: "budget-3",
-    userId: "user-123",
-    month: 12,
-    year: 2025,
-    category: "Entertainment",
-    amount: 150.0,
-  },
-  {
-    id: "budget-4",
-    userId: "user-123",
-    month: 12,
-    year: 2025,
-    category: "Subscription",
-    amount: 100.0,
-  },
-];
+import { ExpenseContext } from "../utils/ExpenseContext";
 
 // Helper functions
 function calculateCategoryTotals(expenses) {
@@ -77,20 +28,22 @@ function calculateTotalSpent(expenses) {
   return total;
 }
 
-/**
- * SpendingBreakdown that will show spending by category
- */
+// SpendingBreakdown that will show spending by category
 export default function SpendingBreakdown({ userId }) {
+  const { expenses, getBudgets } = useContext(ExpenseContext); // Use context
+
   const currentDate = new Date();
+  const currentMonth = currentDate.getMonth() + 1;
   const currentYear = currentDate.getFullYear();
 
   const [categoryTotals, setCategoryTotals] = useState({});
   const [totalSpent, setTotalSpent] = useState(0);
+  const [currentBudgets, setCurrentBudgets] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [expenses]); // Reload when expenses change
 
   const loadData = async () => {
     try {
@@ -99,15 +52,19 @@ export default function SpendingBreakdown({ userId }) {
       // Demo loading delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Calculate totals
-      const totals = calculateCategoryTotals(TEST_EXPENSES);
+      // Calculate totals from context expenses
+      const totals = calculateCategoryTotals(expenses);
       setCategoryTotals(totals);
 
-      const total = calculateTotalSpent(TEST_EXPENSES);
+      const total = calculateTotalSpent(expenses);
       setTotalSpent(total);
 
+      // Get budgets from context
+      const budgetsData = getBudgets(currentMonth, currentYear);
+      setCurrentBudgets(budgetsData);
+
       // Check for overspending
-      checkOverspending(totals);
+      checkOverspending(totals, budgetsData);
     } catch (error) {
       Alert.alert("Error", "Could not load spending data.");
     } finally {
@@ -115,12 +72,12 @@ export default function SpendingBreakdown({ userId }) {
     }
   };
 
-  const checkOverspending = (totals) => {
+  const checkOverspending = (totals, budgetsData) => {
     const overCategories = [];
 
     Object.keys(totals).forEach((category) => {
       const spent = totals[category];
-      const budget = TEST_BUDGETS.find((b) => b.category === category);
+      const budget = budgetsData.find((b) => b.category === category);
 
       if (budget && spent > budget.amount) {
         const overAmount = spent - budget.amount;
@@ -198,7 +155,7 @@ export default function SpendingBreakdown({ userId }) {
           .sort((a, b) => categoryTotals[b] - categoryTotals[a])
           .map((category) => {
             const spent = categoryTotals[category];
-            const budget = TEST_BUDGETS.find((b) => b.category === category);
+            const budget = currentBudgets.find((b) => b.category === category);
             const over = budget && spent > budget.amount;
 
             return (
@@ -249,7 +206,7 @@ export default function SpendingBreakdown({ userId }) {
             const spent = categoryTotals[category];
             const maxSpent = Math.max(...Object.values(categoryTotals));
             const barWidth = (spent / maxSpent) * 100;
-            const budget = TEST_BUDGETS.find((b) => b.category === category);
+            const budget = currentBudgets.find((b) => b.category === category);
             const over = budget && spent > budget.amount;
 
             return (
