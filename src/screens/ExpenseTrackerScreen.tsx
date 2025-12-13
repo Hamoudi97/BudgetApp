@@ -1,15 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  Animated,
-  Easing,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity,StyleSheet,FlatList,ActivityIndicator, Animated, Easing } from "react-native";
 import { ExpenseContext } from "../utils/ExpenseContext";
 
 export default function ExpenseTrackingScreen({ navigation }) {
@@ -19,6 +9,8 @@ export default function ExpenseTrackingScreen({ navigation }) {
   const [desc, setDesc] = useState("");
   const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(false);
+  const [cadToUsd, setCadToUsd] = useState<number | null>(null);
+  const [rateLoading, setRateLoading] = useState(false);
 
   const scale = new Animated.Value(1);
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -49,6 +41,26 @@ export default function ExpenseTrackingScreen({ navigation }) {
         useNativeDriver: true,
       })
     ).start();
+  }, []);
+
+  //fetch currency rate from cad to usd 
+  useEffect(() => {
+    const loadRate = async () => {
+      try {
+        setRateLoading(true);
+        const res = await fetch("https://api.frankfurter.app/latest?from=CAD&to=USD");
+        const json = await res.json();
+        if (json?.rates?.USD) {
+          setCadToUsd(Number(json.rates.USD));
+        }
+      } catch (err) {
+        setCadToUsd(null);
+      } finally {
+        setRateLoading(false);
+      }
+    };
+
+    loadRate();
   }, []);
 
   // Sequence
@@ -93,6 +105,9 @@ export default function ExpenseTrackingScreen({ navigation }) {
         }}
       >
         <Text style={styles.title}>Track Your Expenses 💵</Text>
+        <Text style={styles.rateText}>
+          {rateLoading ? "Loading CAD→USD..." : cadToUsd ? `CAD→USD: ${cadToUsd.toFixed(3)}`: "Could not load CAD→USD"}
+        </Text>
       </Animated.View>
 
       <TextInput
@@ -213,5 +228,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
     fontStyle: "italic",
+  },
+  rateText: {
+    fontSize: 14,
+    color: "#1b5e20",
+    marginBottom: 12,
   },
 });
