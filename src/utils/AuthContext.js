@@ -9,13 +9,8 @@ export const AuthProvider = ({ children }) => {
   // Email validation
   const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  // ✅ Load users & logged-in user from localStorage (runs once)
+  //empty state
   useEffect(() => {
-    const savedUsers = JSON.parse(localStorage.getItem("users"));
-    const savedUser = JSON.parse(localStorage.getItem("loggedInUser"));
-
-    if (savedUsers) setUsers(savedUsers);
-    if (savedUser) setUser(savedUser);
   }, []);
 
   // Register user
@@ -34,8 +29,7 @@ export const AuthProvider = ({ children }) => {
 
     setUsers(updatedUsers);
 
-    // ✅ Save users to localStorage
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    //the state persists in mememory during the app session
 
     return { success: true };
   };
@@ -58,9 +52,6 @@ export const AuthProvider = ({ children }) => {
 
     setUser(found);
 
-    // ✅ Save logged-in user to localStorage
-    localStorage.setItem("loggedInUser", JSON.stringify(found));
-
     return { success: true };
   };
 
@@ -68,8 +59,6 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
 
-    // ❌ Remove logged-in user
-    localStorage.removeItem("loggedInUser");
   };
 
   return (
