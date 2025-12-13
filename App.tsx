@@ -1,8 +1,8 @@
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Text, ScrollView, StyleSheet, View } from "react-native";
+import { Text, ScrollView, StyleSheet, View, ActivityIndicator } from "react-native";
 import { AuthProvider, AuthContext } from "./src/utils/AuthContext";
 import LoginScreen from "./src/screens/LoginScreen";
 import RegisterScreen from "./src/screens/RegisterScreen";
@@ -19,22 +19,51 @@ const CURRENT_USER_ID = "user-123";
 
 // App Info Screen
 function AppInfoScreen() {
+  const [tip, setTip] = useState("");
+  const [tipLoading, setTipLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTip = async () => {
+      try {
+        setTipLoading(true);
+        const res=await fetch("https://api.adviceslip.com/advice");
+        const json =await res.json();
+        if (json?.slip?.advice) {
+          setTip(json.slip.advice);
+        }
+      } catch (err) {
+        setTip("Save a little each day, and watch your wealth grow over time!");
+      } finally {
+        setTipLoading(false);
+      }
+    };
+
+    fetchTip();
+  }, []);
+
   return (
     <ScrollView style={styles.infoContainer}>
       <Text style={styles.infoTitle}>Budget App 💰</Text>
 
-      <Text style={styles.sectionTitle}>Purpose</Text>
+      <Text style={styles.sectionTitle}>🎯 Purpose</Text>
       <Text style={styles.infoText}>
         This app helps you manage your finances by tracking expenses,
         setting budgets, and analyzing spending patterns.
       </Text>
 
-      <Text style={styles.sectionTitle}>Features</Text>
+      <Text style={styles.sectionTitle}>⚙️ Features</Text>
       <Text style={styles.infoText}>• Track daily expenses</Text>
       <Text style={styles.infoText}>• Set monthly budgets</Text>
       <Text style={styles.infoText}>• Search and filter transactions</Text>
       <Text style={styles.infoText}>• View spending breakdown</Text>
       <Text style={styles.infoText}>• Alerts when over budget</Text>
+
+      <Text style={styles.sectionTitle}>💬 Random Advice</Text>
+      {tipLoading ? (
+        <ActivityIndicator size="large" color="#4caf50" style={{ marginVertical: 20 }} />
+      ) : (
+        <Text style={styles.tipBox}>{tip}</Text>
+      )}
     </ScrollView>
   );
 }
@@ -191,10 +220,20 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
   },
-  infoText: {
+  infoText: { 
     fontSize: 16,
     color: "#333",
     marginBottom: 8,
     lineHeight: 24,
+  },
+  tipBox: {
+    fontSize: 16,
+    color: "#fff",
+    backgroundColor: "#4caf50",
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+    fontStyle: "italic",
+    lineHeight: 22,
   },
 });
