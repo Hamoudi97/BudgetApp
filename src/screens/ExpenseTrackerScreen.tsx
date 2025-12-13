@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { ExpenseContext } from "../utils/ExpenseContext";
 
-export default function ExpenseTrackingScreen() {
+export default function ExpenseTrackingScreen({ navigation }) {
   const { expenses, addExpense } = useContext(ExpenseContext);
 
   const [amount, setAmount] = useState("");
@@ -144,11 +144,13 @@ export default function ExpenseTrackingScreen() {
         data={expenses}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <View style={styles.expenseItem}>
-            <Text style={styles.expenseText}>
-              ${item.amount} - {item.category} - {item.description}
-            </Text>
-          </View>
+          <TouchableOpacity onPress={() => navigation.navigate("Search", { expenseCategory: item.category })}>
+            <View style={styles.expenseItem}>
+              <Text style={styles.expenseText}>
+                ${item.amount} - {item.category} - {item.description}
+              </Text>
+            </View>
+          </TouchableOpacity>
         )}
         ListEmptyComponent={() => (
           <Text style={styles.emptyText}>No expenses yet. Add one above!</Text>

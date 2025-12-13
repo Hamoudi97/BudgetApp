@@ -68,10 +68,10 @@ const getUniqueCategories = (expenses) => {
 };
 
 // Main Component
-export default function SearchFilterScreen() {
+export default function SearchFilterScreen({ navigation, route }) {
   const { expenses, budgets, getBudgets } = useContext(ExpenseContext);
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("All");
+  const [category, setCategory] = useState(route?.params?.expenseCategory || route?.params?.filterCategory || "All");
   const [categories, setCategories] = useState(["All"]);
   const [data, setData] = useState([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
