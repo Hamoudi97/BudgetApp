@@ -1,5 +1,5 @@
-import React, {useState } from "react";
-import { View,Text,TextInput, TouchableOpacity,StyleSheet,FlatList, ActivityIndicator, Animated} from "react-native";
+import React, {useState, useRef, useEffect } from "react";
+import { View,Text,TextInput, TouchableOpacity,StyleSheet,FlatList, ActivityIndicator, Animated, Easing} from "react-native";
 
 
 export default function ExpenseTrackingScreen() {
@@ -8,12 +8,43 @@ export default function ExpenseTrackingScreen() {
   const [expenses, setExpenses]=useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Button press anaiamtion
-  const scale =new Animated.Value(1);
-  const handlePress= () =>{
+  const scale = new Animated.Value(1);
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  //parallel
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    Animated.loop(
+      Animated.timing(rotateAnim, {
+        toValue: 1,
+        duration: 3000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+  //sequence
+  const handlePress = () => {
     Animated.sequence([
-      Animated.spring(scale, { toValue: 0.9,useNativeDriver: true }),
-      Animated.spring(scale, { toValue: 1,useNativeDriver: true }),
+      Animated.delay(50),
+      Animated.spring(scale, { toValue:0.9, useNativeDriver: true }),
+      Animated.spring(scale, { toValue:1, useNativeDriver: true }),
     ]).start();
   };
 
@@ -35,7 +66,17 @@ export default function ExpenseTrackingScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Track Your Expenses 💵</Text>
+      <Animated.View style={{
+        opacity: fadeAnim,
+        transform: [{
+          translateY: slideAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, 50],
+          }),
+        }],
+      }}>
+        <Text style={styles.title}>Track Your Expenses 💵</Text>
+      </Animated.View>
 
       <TextInput
         style={styles.input}
